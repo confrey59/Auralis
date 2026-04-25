@@ -1,0 +1,13 @@
+Source: python3-auralis-capture
+Section: python
+Priority: optional
+Maintainer: Dario Marrini <dario.marrini@protonmail.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+
+Package: python3-auralis-capture
+Architecture: all
+Depends: ${misc:Depends}, libauralis-capture0 (>= 0.2.0)
+Description: Python bindings for Auralis Capture
+ Provides pure Python access to the Auralis Capture library without
+ requiring compilation by the end-user.

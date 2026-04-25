@@ -1,0 +1,3 @@
+usr/include/auralis
+usr/lib/*/cmake/AuralisCapture
+usr/lib/*/libauralis_capture.so

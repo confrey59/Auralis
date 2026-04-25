@@ -1,0 +1,9 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: python3-auralis-capture
+Upstream-Contact: Dario Marrini <dario.marrini@protonmail.com>
+
+Files: *
+Copyright: 2026 Dario Marrini <dario.marrini@protonmail.com>
+License: MIT
+ This is free software. You may redistribute copies of it under the terms of
+ the MIT License.

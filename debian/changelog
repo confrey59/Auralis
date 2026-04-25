@@ -1,0 +1,7 @@
+auralis-capture (0.2.0-1) unstable; urgency=medium
+
+  * Initial release: Auralis Capture library
+  * C++17 ALSA backend, JSON config, VAD integration
+  * Google Test suite & CMake export targets
+
+ -- Dario Marrini <dario.marrini@protonmail.com>  Sat, 25 Apr 2026 10:05:26 +0200

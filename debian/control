@@ -1,0 +1,21 @@
+Source: auralis-capture
+Section: libs
+Priority: optional
+Maintainer: Dario Marrini <dario.marrini@protonmail.com>
+Build-Depends: debhelper-compat (= 13), cmake, libasound2-dev, nlohmann-json3-dev, pkg-config, googletest
+Standards-Version: 4.6.2
+Homepage: https://github.com/YOUR_USERNAME/Auralis
+
+Package: libauralis-capture0
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Runtime shared library for Auralis Capture
+ Contains the shared object (.so) required to execute applications
+ or Python bindings that rely on Auralis Capture.
+
+Package: libauralis-capture-dev
+Architecture: any
+Depends: ${misc:Depends}, libauralis-capture0
+Description: Development files for Auralis Capture
+ Headers, CMake export targets, and symbolic links for building
+ software against the Auralis Capture library.
