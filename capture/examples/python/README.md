@@ -1,24 +1,33 @@
 # Auralis Capture Python Bindings
 
-This directory contains pre-compiled and source bindings for the Auralis Capture library using `pybind11`.
+This directory contains the Python bindings for the Auralis Capture library, implemented using `pybind11`.
+It allows you to capture audio directly from Python with minimal setup.
 
 ## Installation
 
-### Option 1: Pre-compiled Binary (x86_64 Linux only)
-If you are on an x86_64 Linux system with Python 3.13+, you can use the pre-compiled `.so` file directly.
+### Option 1: Pre-compiled Binary (Recommended for x86_64 Linux)
 
-1. Ensure `libauralis-capture0` is installed:
+If you are running on an **x86_64** Linux system with **Python 3.13+**, you can use the pre-compiled shared library provided in this directory.
+
+1. Ensure the core library is installed:
    ```bash
    sudo dpkg -i libauralis-capture0_*.deb
    ```
-2. Copy the shared object to your Python path or add this directory to `PYTHONPATH`:
+2. Copy the binding module to your Python path:
    ```bash
-   export PYTHONPATH="$PYTHONPATH:/percorso/a/capture/examples/python"
-   # Or copy it:
-   sudo cp auralis_capture.cpython-313-x86_64-linux-gnu.so /usr/lib/python3/dist-packages/
+   # Find the .so file in this directory
+   SO_FILE=$(ls auralis_capture.cpython-313-x86_64-linux-gnu.so)
+   sudo cp "$SO_FILE" /usr/lib/python3/dist-packages/
+   ```
+3. Verify the installation:
+   ```bash
+   python3 -c "import auralis_capture; print('Success!')"
    ```
 
-### Option 2: Build from Source (Recommended for other architectures/Python versions)
+### Option 2: Build from Source (For other architectures or Python versions)
+
+If you are on ARM, macOS, or a different Python version, you must compile the binding yourself.
+
 1. Install dependencies:
    ```bash
    sudo apt install cmake pybind11-dev python3-dev libauralis-capture-dev
@@ -29,70 +38,77 @@ If you are on an x86_64 Linux system with Python 3.13+, you can use the pre-comp
    cmake .. -DCMAKE_BUILD_TYPE=Release
    make -j$(nproc)
    ```
-3. Use the generated `.so` file in your project.
+3. Use the generated `.so` file:
+   The compiled module will be in `build/auralis_capture.cpython-...so`. You can copy it to your project directory or add the `build` folder to your `PYTHONPATH`.
 
 ## Usage Example
 
-Here is how to capture audio using the `Stream` class with a callback:
+Here is a complete example of how to capture audio using the `Stream` class and a callback function.
 
 ```python
 import auralis_capture
 import time
 
-# 1. Configure audio settings
-cfg = auralis_capture.AudioConfig()
-cfg.sample_rate = 48000
-cfg.channels = 1
-cfg.buffer_size = 512
-cfg.validate()
+def main():
+    # 1. Configure audio settings
+    cfg = auralis_capture.AudioConfig()
+    cfg.sample_rate = 48000
+    cfg.channels = 1      # Mono
+    cfg.buffer_size = 512 # Frames per buffer
+    cfg.validate()
 
-# 2. Get available devices
-devices = auralis_capture.get_devices()
-if not devices:
-    print("No audio devices found!")
-    exit(1)
+    # 2. Check for available devices
+    devices = auralis_capture.get_devices()
+    if not devices:
+        print("No audio devices found!")
+        return
 
-print(f"Available devices: {len(devices)}")
+    print(f"Found {len(devices)} device(s).")
 
-# 3. Define the callback function
-def on_audio_data(data_list, num_frames, vad_active):
-    """
-    Called automatically when new audio data arrives.
-    
-    Args:
-        data_list: List of float values representing audio samples (-1.0 to 1.0).
-        num_frames: Number of frames in this buffer.
-        vad_active: Boolean indicating if Voice Activity Detection is active.
-    """
-    # Esempio: Stampa il valore RMS (volume approssimativo)
-    if len(data_list) > 0:
-        rms = sum(x*x for x in data_list) / len(data_list)
-        volume = rms ** 0.5
-        if volume > 0.01: # Filtra il silenzio
-            print(f"[Audio] Volume: {volume:.3f} | Frames: {num_frames}")
-
-# 4. Create and start the stream
-try:
-    stream = auralis_capture.Stream(cfg)
-    stream.set_callback(on_audio_data)
-    stream.start()
-    
-    print("Capturing audio... Press Ctrl+C to stop.")
-    
-    # Keep the main thread alive
-    while stream.is_running():
-        time.sleep(0.1)
+    # 3. Define the callback function
+    def on_audio_data(data_list, num_frames, vad_active):
+        """
+        This function is called automatically by the C++ thread when new data arrives.
         
-except KeyboardInterrupt:
-    print("\\nStopping...")
-finally:
-    # Always clean up
-    if 'stream' in locals():
-        stream.stop()
-        stream.close()
+        Args:
+            data_list (list[float]): Audio samples as floats (-1.0 to 1.0).
+            num_frames (int): Number of frames in this buffer.
+            vad_active (bool): Voice Activity Detection status.
+        """
+        # Simple volume calculation (RMS)
+        if len(data_list) > 0:
+            rms = sum(x*x for x in data_list) / len(data_list)
+            volume = rms ** 0.5
+            
+            # Print only if there is significant sound
+            if volume > 0.01:
+                print(f"[Audio] Vol: {volume:.3f} | Frames: {num_frames}")
+
+    # 4. Create and start the stream
+    try:
+        stream = auralis_capture.Stream(cfg)
+        stream.set_callback(on_audio_data)
+        stream.start()
+        
+        print("Capturing audio... Press Ctrl+C to stop.")
+        
+        # Keep the main thread alive while capturing
+        while stream.is_running():
+            time.sleep(0.1)
+            
+    except KeyboardInterrupt:
+        print("\\nStopping...")
+    finally:
+        # Always clean up resources
+        if 'stream' in locals():
+            stream.stop()
+            stream.close()
+
+if __name__ == "__main__":
+    main()
 ```
 
 ## Notes
-- The `Stream` class handles the actual audio capture in a separate thread.
-- The callback runs in that background thread, so keep it lightweight.
-- Make sure to call `stop()` and `close()` to release resources properly.
+- The `Stream` class runs its capture logic in a separate background thread.
+- The callback function (`on_audio_data`) is executed in that background thread. Keep it lightweight to avoid blocking audio processing.
+- Always call `stop()` and `close()` to release ALSA resources properly.
