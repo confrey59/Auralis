@@ -88,3 +88,16 @@ cm build,make -j$(nproc),ctest --output-on-failure
 
 ## License
 Distributed under the MIT License. See LICENSE for more information.
+
+## Python Bindings
+
+For Python developers, we provide pre-compiled bindings for x86_64 Linux and source code for other architectures.
+
+### Quick Start (x86_64 Linux)
+1. Install the core library: `sudo dpkg -i libauralis-capture0_*.deb`
+2. Copy the binding module: `sudo cp capture/examples/python/auralis_capture.cpython-313-x86_64-linux-gnu.so /usr/lib/python3/dist-packages/`
+3. Run the example: `python3 capture/examples/python/main.py`
+
+### Documentation & Examples
+Detailed installation instructions, build guides for other architectures, and usage examples are available in the [Python Examples Directory](capture/examples/python/README.md).
+
